@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OVERCLOCK PRO | Real-Time CPU Telemetry Workbench</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-950 text-slate-100 font-mono min-h-screen p-6">
+
+    <div class="max-w-6xl mx-auto space-y-6">
+        
+        <!-- Header -->
+        <header class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-wrap justify-between items-center shadow-xl">
+            <div>
+                <h1 class="text-2xl font-bold text-indigo-400 tracking-wider flex items-center">
+                    <i class="fa-solid fa-microchip mr-3 text-indigo-500"></i>OVERCLOCK PRO
+                </h1>
+                <p class="text-xs text-slate-400 mt-1">Real-Time Microprocessor Performance & Dynamic Power Workbench</p>
+            </div>
+            <div class="flex items-center space-x-3 mt-4 sm:mt-0">
+                <span id="systemStatusBadge" class="px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-950 text-emerald-400 border border-emerald-800 tracking-wide uppercase">
+                    SYSTEM STABLE
+                </span>
+                <button onclick="toggleModal()" class="px-3 py-1.5 bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 text-xs rounded-lg hover:bg-indigo-600/40 transition">
+                    <i class="fa-solid fa-square-root-variable mr-1.5"></i>Hardware Equations
+                </button>
+            </div>
+        </header>
+
+        <!-- Stock / Baseline Reference Banner -->
+        <div class="bg-slate-900/70 border border-indigo-500/20 rounded-2xl p-4 flex flex-wrap justify-around items-center gap-4 text-xs">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-sliders text-indigo-400"></i>
+                <span class="text-slate-400">Base Spec:</span>
+                <span class="font-bold text-slate-200">100 MHz × 36 (3.60 GHz)</span>
+            </div>
+            <div class="flex items-center space-x-2 border-t sm:border-t-0 sm:border-l border-slate-800 pt-2 sm:pt-0 sm:pl-4">
+                <i class="fa-solid fa-bolt text-amber-400"></i>
+                <span class="text-slate-400">Stock VCore:</span>
+                <span class="font-bold text-slate-200">1.20 V</span>
+            </div>
+            <div class="flex items-center space-x-2 border-t sm:border-t-0 sm:border-l border-slate-800 pt-2 sm:pt-0 sm:pl-4">
+                <i class="fa-solid fa-plug text-yellow-400"></i>
+                <span class="text-slate-400">Rated TDP:</span>
+                <span class="font-bold text-slate-200">62.2 W</span>
+            </div>
+            <div class="flex items-center space-x-2 border-t sm:border-t-0 sm:border-l border-slate-800 pt-2 sm:pt-0 sm:pl-4">
+                <i class="fa-solid fa-temperature-arrow-up text-rose-400"></i>
+                <span class="text-slate-400">T_Max Thermal Limit:</span>
+                <span class="font-bold text-rose-300">95.0 °C</span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Controls Panel -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6 shadow-xl">
+                <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-widest border-b border-slate-800 pb-3">
+                    <i class="fa-solid fa-sliders mr-2 text-indigo-400"></i>Hardware Controls
+                </h2>
+
+                <!-- Base Clock -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs">
+                        <label class="text-slate-400">Base Clock (BCLK)</label>
+                        <span class="text-indigo-400 font-bold"><span id="bclkVal">100</span> MHz</span>
+                    </div>
+                    <input type="range" id="bclk" min="90" max="120" value="100" class="w-full accent-indigo-500 bg-slate-800 h-2 rounded-lg cursor-pointer" oninput="runSimulation()">
+                </div>
+
+                <!-- Multiplier -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs">
+                        <label class="text-slate-400">Clock Multiplier</label>
+                        <span class="text-indigo-400 font-bold"><span id="multVal">36</span>x</span>
+                    </div>
+                    <input type="range" id="multiplier" min="20" max="60" value="36" class="w-full accent-indigo-500 bg-slate-800 h-2 rounded-lg cursor-pointer" oninput="runSimulation()">
+                </div>
+
+                <!-- VCore Voltage -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs">
+                        <label class="text-slate-400">Supply Voltage (VCore)</label>
+                        <span class="text-amber-400 font-bold"><span id="voltVal">1.20</span> V</span>
+                    </div>
+                    <input type="range" id="voltage" min="0.80" max="1.60" step="0.025" value="1.20" class="w-full accent-amber-500 bg-slate-800 h-2 rounded-lg cursor-pointer" oninput="runSimulation()">
+                </div>
+
+                <!-- Cooler Select -->
+                <div class="space-y-2">
+                    <label class="text-xs text-slate-400">Cooling Solution ($R_{\text{th}}$)</label>
+                    <select id="cooler" class="w-full bg-slate-800 border border-slate-700 text-xs rounded-lg p-2.5 text-slate-200 focus:outline-none focus:border-indigo-500" onchange="runSimulation()">
+                        <option value="0.18">Stock Air Cooler (0.18 °C/W)</option>
+                        <option value="0.08">Dual-Tower Cooler (0.08 °C/W)</option>
+                        <option value="0.04" selected>240mm Liquid AIO (0.04 °C/W)</option>
+                    </select>
+                </div>
+                
+                <button onclick="resetToStock()" class="w-full py-2 bg-slate-800 text-slate-400 border border-slate-700 hover:text-white rounded-lg text-xs transition">
+                    <i class="fa-solid fa-rotate-left mr-1.5"></i>Reset to Stock Baseline
+                </button>
+            </div>
+
+            <!-- Telemetry Metrics & Chart -->
+            <div class="lg:col-span-2 space-y-6">
+
+                <!-- Metric Gauges Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    
+                    <!-- Frequency Metric -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-400 uppercase tracking-wider">Clock Rate ($f$)</span>
+                            <span class="text-slate-500">Stock: 3.6 GHz</span>
+                        </div>
+                        <div class="my-2 flex items-baseline">
+                            <span id="outFreq" class="text-3xl font-extrabold text-indigo-400">3.60</span>
+                            <span class="text-xs text-slate-500 ml-1">GHz</span>
+                            <span id="freqDelta" class="text-xs font-bold ml-auto text-slate-400">+0%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                            <div id="freqBar" class="bg-indigo-500 h-full transition-all duration-300" style="width: 50%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Power Metric -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-400 uppercase tracking-wider">Dynamic Power ($P$)</span>
+                            <span class="text-slate-500">Stock: 62.2 W</span>
+                        </div>
+                        <div class="my-2 flex items-baseline">
+                            <span id="outPower" class="text-3xl font-extrabold text-amber-400">62.2</span>
+                            <span class="text-xs text-slate-500 ml-1">Watts</span>
+                            <span id="powerDelta" class="text-xs font-bold ml-auto text-slate-400">+0%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                            <div id="powerBar" class="bg-amber-500 h-full transition-all duration-300" style="width: 30%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Temperature Metric -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-xl">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-400 uppercase tracking-wider">Junction Temp ($T_j$)</span>
+                            <span class="text-slate-500">Stock: 30.5 °C</span>
+                        </div>
+                        <div class="my-2 flex items-baseline">
+                            <span id="outTemp" class="text-3xl font-extrabold text-emerald-400">30.5</span>
+                            <span class="text-xs text-slate-500 ml-1">°C</span>
+                            <span id="tempDelta" class="text-xs font-bold ml-auto text-slate-400">+0%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                            <div id="tempBar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 30%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Chart -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+                    <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+                        <i class="fa-solid fa-chart-line mr-2 text-indigo-400"></i>Live Telemetry (Junction Temperature vs Dynamic Power)
+                    </h3>
+                    <div class="h-56">
+                        <canvas id="telemetryChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Formula Reference Modal -->
+    <div id="formulaModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 max-w-xl w-full rounded-2xl p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-sm font-bold text-indigo-400 uppercase">Hardware Mathematical Foundations</h3>
+                <button onclick="toggleModal()" class="text-slate-400 hover:text-white text-lg">&times;</button>
+            </div>
+            <div class="space-y-3 text-xs text-slate-300">
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                    <span class="font-bold text-indigo-300">1. Clock Frequency ($f$):</span>
+                    <p class="font-mono text-slate-400 mt-1">f = Base Clock (BCLK) × Multiplier</p>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                    <span class="font-bold text-amber-300">2. Dynamic CMOS Power ($P$):</span>
+                    <p class="font-mono text-slate-400 mt-1">P = Dynamic Capacitance (C) × Voltage (V²) × Frequency (f)</p>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                    <span class="font-bold text-emerald-300">3. Thermal Dissipation Model ($T_j$):</span>
+                    <p class="font-mono text-slate-400 mt-1">T_junction = T_ambient + (Power × Thermal Resistance R_th)</p>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                    <span class="font-bold text-rose-300">4. Voltage Stability Bound ($V_{\text{min}}$):</span>
+                    <p class="font-mono text-slate-400 mt-1">V_min = V_stock + α × (f_target - f_stock)  [Setup Time Protection]</p>
+                </div>
+            </div>
+            <button onclick="toggleModal()" class="w-full py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-500 transition">Close</button>
+        </div>
+    </div>
+
+    <script>
+        let telemetryChart;
+        const timeLabels = Array(15).fill('');
+        const tempData = Array(15).fill(30.5);
+        const powerData = Array(15).fill(62.2);
+
+        const STOCK_FREQ = 3.60;
+        const STOCK_POWER = 62.20;
+        const STOCK_TEMP = 30.50;
+
+        function initChart() {
+            const ctx = document.getElementById('telemetryChart').getContext('2d');
+            telemetryChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [
+                        {
+                            label: 'Temp (°C)',
+                            data: tempData,
+                            borderColor: '#10b981',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Power (W)',
+                            data: powerData,
+                            borderColor: '#f59e0b',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { display: false },
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            grid: { color: '#1e293b' },
+                            ticks: { color: '#94a3b8', font: { size: 10 } }
+                        },
+                        y1: {
+                            type: 'linear',
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            ticks: { color: '#94a3b8', font: { size: 10 } }
+                        }
+                    },
+                    plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } }
+                }
+            });
+        }
+
+        function runSimulation() {
+            const bclk = parseFloat(document.getElementById('bclk').value);
+            const multiplier = parseFloat(document.getElementById('multiplier').value);
+            const voltage = parseFloat(document.getElementById('voltage').value);
+            const rThermal = parseFloat(document.getElementById('cooler').value);
+
+            document.getElementById('bclkVal').innerText = bclk;
+            document.getElementById('multVal').innerText = multiplier;
+            document.getElementById('voltVal').innerText = voltage.toFixed(2);
+
+            let freqGhz = (bclk * multiplier) / 1000;
+            const freqHz = bclk * multiplier * 1e6;
+            const capacitance = 1.2e-8;
+            const ambientTemp = 28.0;
+
+            let power = capacitance * (voltage ** 2) * freqHz;
+            let temp = ambientTemp + (power * rThermal);
+
+            const reqVoltage = 1.0 + (freqGhz - 3.6) * 0.15;
+            const badge = document.getElementById('systemStatusBadge');
+
+            if (voltage < reqVoltage) {
+                badge.innerText = "CRASH: UNDER-VOLTED (SETUP TIME VIOLATION)";
+                badge.className = "px-4 py-1.5 rounded-full text-xs font-bold bg-rose-950 text-rose-400 border border-rose-800 tracking-wide uppercase animate-pulse";
+            } else if (temp >= 95.0) {
+                freqGhz = freqGhz * 0.75;
+                badge.innerText = "WARNING: THERMAL THROTTLING ACTIVE";
+                badge.className = "px-4 py-1.5 rounded-full text-xs font-bold bg-amber-950 text-amber-400 border border-amber-800 tracking-wide uppercase animate-pulse";
+            } else {
+                badge.innerText = "SYSTEM STABLE";
+                badge.className = "px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-950 text-emerald-400 border border-emerald-800 tracking-wide uppercase";
+            }
+
+            document.getElementById('outFreq').innerText = freqGhz.toFixed(2);
+            document.getElementById('outPower').innerText = power.toFixed(1);
+            document.getElementById('outTemp').innerText = temp.toFixed(1);
+
+            const freqDiff = (((freqGhz - STOCK_FREQ) / STOCK_FREQ) * 100).toFixed(0);
+            const powerDiff = (((power - STOCK_POWER) / STOCK_POWER) * 100).toFixed(0);
+            const tempDiff = (((temp - STOCK_TEMP) / STOCK_TEMP) * 100).toFixed(0);
+
+            setDeltaBadge('freqDelta', freqDiff);
+            setDeltaBadge('powerDelta', powerDiff);
+            setDeltaBadge('tempDelta', tempDiff);
+
+            document.getElementById('freqBar').style.width = Math.min((freqGhz / 6) * 100, 100) + '%';
+            document.getElementById('powerBar').style.width = Math.min((power / 250) * 100, 100) + '%';
+            document.getElementById('tempBar').style.width = Math.min((temp / 100) * 100, 100) + '%';
+
+            tempData.push(temp.toFixed(1));
+            tempData.shift();
+            powerData.push(power.toFixed(1));
+            powerData.shift();
+            telemetryChart.update();
+        }
+
+        function setDeltaBadge(id, percent) {
+            const el = document.getElementById(id);
+            if (percent > 0) {
+                el.innerText = `+${percent}%`;
+                el.className = "text-xs font-bold ml-auto text-rose-400";
+            } else if (percent < 0) {
+                el.innerText = `${percent}%`;
+                el.className = "text-xs font-bold ml-auto text-emerald-400";
+            } else {
+                el.innerText = `+0%`;
+                el.className = "text-xs font-bold ml-auto text-slate-400";
+            }
+        }
+
+        function resetToStock() {
+            document.getElementById('bclk').value = 100;
+            document.getElementById('multiplier').value = 36;
+            document.getElementById('voltage').value = 1.20;
+            document.getElementById('cooler').value = 0.04;
+            runSimulation();
+        }
+
+        function toggleModal() {
+            document.getElementById('formulaModal').classList.toggle('hidden');
+        }
+
+        window.onload = () => {
+            initChart();
+            runSimulation();
+        };
+    </script>
+</body>
+</html>
