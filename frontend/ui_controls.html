@@ -1,0 +1,34 @@
+<!-- 
+  OVERCLOCK PRO - Frontend Hardware Control Sliders & Telemetry Cards Module
+  Role: Frontend Developer
+-->
+<section id="hardware-controls" class="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-lg">
+  <h2 class="text-lg font-semibold text-sky-400 mb-4">CPU Overclocking Parameters</h2>
+  
+  <!-- Base Clock (BCLK) Control -->
+  <div class="mb-4">
+    <div class="flex justify-between text-sm mb-1">
+      <label for="bclk" class="text-slate-300">Base Clock (BCLK)</label>
+      <span id="bclkVal" class="font-mono text-sky-400">100 MHz</span>
+    </div>
+    <input type="range" id="bclk" min="90" max="120" value="100" step="1" class="w-full accent-sky-500">
+  </div>
+
+  <!-- Core Multiplier Control -->
+  <div class="mb-4">
+    <div class="flex justify-between text-sm mb-1">
+      <label for="multiplier" class="text-slate-300">Core Multiplier Ratio</label>
+      <span id="multiplierVal" class="font-mono text-sky-400">36x</span>
+    </div>
+    <input type="range" id="multiplier" min="20" max="60" value="36" step="1" class="w-full accent-sky-500">
+  </div>
+
+  <!-- Core Voltage (VCore) Control -->
+  <div class="mb-4">
+    <div class="flex justify-between text-sm mb-1">
+      <label for="voltage" class="text-slate-300">Core Voltage (VCore)</label>
+      <span id="voltageVal" class="font-mono text-amber-400">1.20 V</span>
+    </div>
+    <input type="range" id="voltage" min="0.80" max="1.60" value="1.20" step="0.01" class="w-full accent-amber-500">
+  </div>
+</section>
